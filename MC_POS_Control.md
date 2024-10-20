@@ -1,4 +1,4 @@
-# Multicopter Attitude Control 
+# Multicopter Position Control 
 - `MulticopterPositionControl.hpp` defines the `MulticopterPositionControl` class which inherits from `ModuleBase`, `ModuleParams`, and `px4::ScheduledWorkItem`. 
 - The class only defines the function sigmatures with actual implementation in `MulticopterPositionControl.cpp`
 - The class has the following objects created inside it
