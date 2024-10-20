@@ -1,6 +1,5 @@
-> `MulticopterPositionControl.hpp`
-- This files defines the `MulticopterPositionControl` class which inherits from `ModuleBase`, `ModuleParams`, and `px4::ScheduledWorkItem`. 
-
+# # Multicopter Attitude Control 
+- `MulticopterPositionControl.hpp` defines the `MulticopterPositionControl` class which inherits from `ModuleBase`, `ModuleParams`, and `px4::ScheduledWorkItem`. 
 - The class only defines the function sigmatures with actual implementation in `MulticopterPositionControl.cpp`
 - The class has the following objects created inside it
 
@@ -42,12 +41,10 @@
 					trajectory_setpoint_s &setpoint);
 ```
 
-> `Takeoff.hpp`
-
-- This files defines the `TakeoffHandling` class.
+# TakeoffHandling
+- `Takeoff.hpp` defines the `TakeoffHandling` class.
 - The class only defines the function sigmatures with actual implementation in `Takeoff.cpp`
 - The following functions have description 
-
 ```cpp
 	// initialize parameters
 	void setSpoolupTime(const float seconds) { _spoolup_time_hysteresis.set_hysteresis_time_from(false, seconds * 1_s); }
@@ -79,14 +76,41 @@
 	float updateRamp(const float dt, const float takeoff_desired_vz);
 ```
 
-> `PositionControl.hpp`
+# PositionControl
+- `PositionControl.hpp` defines `PositionControl` class & it's implementation is in `PositionControl.cpp`
 
-- This class defines `PositionControl` class & it's implementation is in `PositionControl.cpp` which imports (includes) `ControlMath.hpp`
+1. **Constants and Structures**: 
+   - It defines an empty trajectory setpoint with all values set to `NAN`.
 
-> `GotoControl.hpp`
+3. **Gain and Limit Settings**:
+   - Methods for setting velocity gains (`P`, `I`, `D`), velocity limits (horizontal and vertical), thrust limits, and horizontal thrust margins are provided. 
 
+4. **Hover Thrust Adjustment**:
+   - The `updateHoverThrust` method calculates the necessary adjustment to the acceleration setpoint when the hover thrust is changed.
+
+5. **State Management**:
+   - The `setState` method updates the position, velocity, and yaw states of the drone, while the `setInputSetpoint` method takes in a trajectory setpoint, including position, velocity, acceleration, yaw, and yaw speed.
+
+6. **Control Update Logic**:
+   - The `update` method checks for valid inputs and processes position and velocity control through `_positionControl` and `_velocityControl` methods, respectively. It ensures that the output acceleration and thrust setpoints are valid.
+
+7. **Position Control**:
+   - In `_positionControl`, a proportional controller calculates the desired velocity based on position errors. It also applies constraints to ensure the velocity remains within limits.
+
+8. **Velocity Control**:
+   - The `_velocityControl` method handles the PID control for velocity, calculates the acceleration setpoint based on velocity errors, and implements anti-windup mechanisms for thrust and velocity.
+
+9. **Acceleration Control**:
+   - The `_accelerationControl` method computes thrust based on specific forces, converts these to thrust values, and limits tilt angles to maintain stable flight.
+
+10. **Input Validation**:
+    - The `_inputValid` method checks the validity of input states and ensures that setpoints are finite and correspond appropriately across axes.
+
+11. **Setpoint Retrieval**:
+    - The methods `getLocalPositionSetpoint` and `getAttitudeSetpoint` retrieve the current local position and attitude setpoints, respectively, populating structures with the necessary data for flight control.
+
+# GotoControl
 - Defines `GotoControl` class & it's implementation in `GotoControl.cpp`
-
 ```cpp
 /**
  * @file GotoControl.hpp
@@ -97,3 +121,26 @@
  * Be sure to set constraints with setGotoConstraints() before calling the update() method for the first time
  */
 ```
+1. **Check for Setpoint**:
+   - The `checkForSetpoint` method verifies whether a valid setpoint is available and whether the system should process it based on the current timestamp and the enabled state.
+
+2. **Update Method**:
+   - The `update` method:
+     - Initializes position and heading smoothers if not already done.
+     - Retrieves the desired position setpoint.
+     - Validates the setpoint and current position for finiteness.
+     - Generates smoothed position setpoints using the `PositionSmoothing` class.
+     - Updates the trajectory setpoint, including position, velocity, and acceleration.
+     - Optionally controls the heading, applying similar smoothing techniques and updates the trajectory accordingly.
+     - Publishes the updated trajectory and vehicle constraints.
+
+3. **Reset Functions**:
+   - `resetPositionSmoother`: Resets the position smoother using the current position, ensuring that it is valid.
+   - `resetHeadingSmoother`: Resets the heading smoother with the current heading.
+
+4. **Setting Constraints**:
+   - `setPositionSmootherLimits`: Sets constraints on the maximum horizontal and vertical speeds and accelerations based on the current setpoint, ensuring that the vehicle does not exceed these limits.
+   - `setHeadingSmootherLimits`: Sets constraints on the maximum heading rate and acceleration.
+
+5. **Mathematical Operations**:
+   - The file frequently uses mathematical constraints to ensure values remain within defined limits, using the `math::constrain` function for safety.
